@@ -72,7 +72,7 @@ pub fn benchmark(c: &mut Criterion) {
 
     let mut aoc = c.benchmark_group("Advent of Code Data");
     aoc.measurement_time(Duration::from_millis(9000));
-    let aoc_data = read_values("./data/1_input.txt".to_string());
+    let aoc_data = read_values("./data/input.txt".to_string());
     aoc.bench_function("use_combos", |b| b.iter(|| use_combos(black_box(2020), black_box(3), &aoc_data)));
     aoc.bench_function("find_addends", |b| b.iter(|| find_addends(black_box(2020), black_box(3), &aoc_data)));
     aoc.finish();
@@ -97,7 +97,6 @@ pub fn benchmark(c: &mut Criterion) {
             BenchmarkId::new("find_addends", i), |b| b.iter(|| find_addends(black_box(2020), black_box(3), &set)));
     }
     rand_200_group.finish();
-    */
 
     let mut rand_1000_group = c.benchmark_group(format!("{} Sets of 1000 Random Data Entries", SETS));
     for i in 0..20 {
@@ -108,6 +107,7 @@ pub fn benchmark(c: &mut Criterion) {
             BenchmarkId::new("find_addends", i), |b| b.iter(|| find_addends(black_box(2020), black_box(3), &set)));
     }
     rand_1000_group.finish();
+    */
 }
 
 criterion_group!(benches, benchmark);

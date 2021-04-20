@@ -77,6 +77,13 @@ pub fn benchmark(c: &mut Criterion) {
     aoc.bench_function("find_addends", |b| b.iter(|| find_addends(black_box(2020), black_box(3), &aoc_data)));
     aoc.finish();
 
+    let mut five = c.benchmark_group("five_addends");
+    five.measurement_time(Duration::from_millis(9000));
+    let five_data = read_values("./data/five_addends_2020_sum.txt".to_string());
+    five.bench_function("use_combos", |b| b.iter(|| use_combos(black_box(2020), black_box(5), &five_data)));
+    five.bench_function("find_addends", |b| b.iter(|| find_addends(black_box(2020), black_box(5), &five_data)));
+    five.finish();
+
     /*
     let mut rand_100_group = c.benchmark_group(format!("{} Sets of 100 Random Data Entries", SETS));
     for i in 0..20 {

@@ -6,15 +6,16 @@ param (
 	[switch]$worstcase = $false
 )
 
-# ./random_sets.ps1 [file name] [max] [entry count] || -guarantee -worstcase
-
-# Generate (count - num_of_addends) lines of pure random data
-
-$TempFile = Get-Random -Minimum 1 -Maximum ($maximum + 1) -Count ($count - 1)
+# USAGE: ./random_sets.ps1 [file name] [max] [entry count] || -guarantee -worstcase
+	
+$null = New-Item -ItemType "file" -Path . -Name $filename -Force
 
 $Balance = ($maximum - $guarantee + 1)
 $Solutions = @()
 $SolutionLines = @()
+
+# Generate (count - num_of_addends) lines of pure random data
+$TempFile = Get-Random -Minimum 1 -Maximum ($maximum + 1) -Count ($count - $guarantee)
 
 while ($SolutionLines.count -lt $guarantee) {
 	$RandLine = Get-Random -Minimum 1 -Maximum $count
@@ -51,8 +52,7 @@ while ($Solutions.count -lt $guarantee) {
 	
 	$Balance = ($Balance - $Value + 1)
 }
-	
-$File = New-Item -ItemType "file" -Path . -Name $filename -Force
+
 $index = 0
 $LineNumber = 0
 
@@ -69,7 +69,6 @@ foreach ($line in $TempFile) {
 			$index ++
 		}
 	}
-
-$line | Out-File -FilePath .\$filename -Append
-$LineNumber ++
+	$line | Out-File -FilePath .\$filename -Append
+	$LineNumber ++
 }

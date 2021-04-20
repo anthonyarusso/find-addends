@@ -8,24 +8,16 @@ param (
 
 # ./random_sets.ps1 [file name] [max] [entry count] || -guarantee -worstcase
 
-# set guarantee to the number of addends to guarantee a correct solution
-
 # Generate (count - num_of_addends) lines of pure random data
-$count -= $guarantee
 
-$TempFile = Get-Random -Minimum 1 -Maximum ($maximum + 1) -Count $count
+$TempFile = Get-Random -Minimum 1 -Maximum ($maximum + 1) -Count ($count - 1)
 
-# Maximum value for each solution. +1 to account for zero-index
-# +1 to account for the first addend itself
-# I.e. if you had 4 addends you would need at least a balance
-# of 3 after the first iteration.
-
-$Balance = ($maximum - $guarantee + 2)
+$Balance = ($maximum - $guarantee + 1)
 $Solutions = @()
 $SolutionLines = @()
 
-while ($SolutionLines.count -ne $guarantee) {
-	$RandLine = Get-Random -Minimum 1 -Maximum ($count + 1)
+while ($SolutionLines.count -lt $guarantee) {
+	$RandLine = Get-Random -Minimum 1 -Maximum $count
 	$Unique = $true
 
 	# If the line number does not already exist in
@@ -41,8 +33,13 @@ while ($SolutionLines.count -ne $guarantee) {
 	}
 }
 
-while ($Solutions.count -ne $guarantee) {
-	$Value = Get-Random -Minimum 1 -Maximum $Balance
+while ($Solutions.count -lt $guarantee) {
+	if (($guarantee - $Solutions.count) -eq 1) {
+		# If we are on the last addend, assign the remaining balance
+		$Value = $Balance
+	} else {
+		$Value = Get-Random -Minimum 1 -Maximum $Balance
+	}
 
 	# Assume Get-Random picks the max value (balance)
 	# then the new balance should equal at least 1
@@ -50,24 +47,29 @@ while ($Solutions.count -ne $guarantee) {
 	# (Don't worry, we subtracted these values earlier
 	# and are now just adding them back in one by one.
 
-	$Balance = ($Balance - $Value + 1)
-
 	$Solutions += $Value
+	
+	$Balance = ($Balance - $Value + 1)
 }
 	
+$File = New-Item -ItemType "file" -Path . -Name $filename -Force
 $index = 0
 $LineNumber = 0
 
 foreach ($line in $TempFile) {
 	foreach ($SLine in $SolutionLines) {
 		if ($SLine -eq $LineNumber) {
-			$File += $Solutions[$index]
+			$Solutions[$index] | Out-File -FilePath .\$filename -Append
+
+			$elem = $Solutions[$index]
+			$LineAdjust = $SLine + $index
+			$checksum += $elem
+			write-output "Solution $elem on line $LineAdjust"
+
 			$index ++
 		}
 	}
 
-$File += $line	
+$line | Out-File -FilePath .\$filename -Append
 $LineNumber ++
 }
-
-$File | Out-File -FilePath $filename

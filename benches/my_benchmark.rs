@@ -47,7 +47,7 @@ fn read_values(path: String) -> Vec<u32> {
     let file = File::open(path).unwrap();
     let mut reader = io::BufReader::new(file);
     let mut buf = String::new();
-    let mut contents: Vec<u32> = Vec::with_capacity(200);
+    let mut contents: Vec<u32> = Vec::with_capacity(1000);
     let mut line_number = 1;
 
     while reader.read_line(&mut buf).unwrap() > 0 {
@@ -85,43 +85,11 @@ pub fn benchmark(c: &mut Criterion) {
     five.finish();
 
     let mut test_two = c.benchmark_group("test_two");
-    test_two.measurement_time(Duration::from_millis(9000));
+    test_two.sample_size(20).measurement_time(Duration::from_secs(500));
     let two_data = read_values("./data/2.txt".to_string());
     test_two.bench_function("use_combos", |b| b.iter(|| use_combos(black_box(2020), black_box(5), &two_data)));
     test_two.bench_function("find_addends", |b| b.iter(|| find_addends(black_box(2020), black_box(5), &two_data)));
     test_two.finish();
-
-    /*
-    let mut rand_100_group = c.benchmark_group(format!("{} Sets of 100 Random Data Entries", SETS));
-    for i in 0..20 {
-        let set = read_values(format!("./data/random/100/{}.txt", i));
-        rand_100_group.bench_function(
-            BenchmarkId::new("use_combos", i), |b| b.iter(|| use_combos(black_box(2020), black_box(3), &set)));
-        rand_100_group.bench_function(
-            BenchmarkId::new("find_addends", i), |b| b.iter(|| find_addends(black_box(2020), black_box(3), &set)));
-    }
-    rand_100_group.finish();
-
-    let mut rand_200_group = c.benchmark_group(format!("{} Sets of 200 Random Data Entries", SETS));
-    for i in 0..20 {
-        let set = read_values(format!("./data/random/200/{}.txt", i));
-        rand_200_group.bench_function(
-            BenchmarkId::new("use_combos", i), |b| b.iter(|| use_combos(black_box(2020), black_box(3), &set)));
-        rand_200_group.bench_function(
-            BenchmarkId::new("find_addends", i), |b| b.iter(|| find_addends(black_box(2020), black_box(3), &set)));
-    }
-    rand_200_group.finish();
-
-    let mut rand_1000_group = c.benchmark_group(format!("{} Sets of 1000 Random Data Entries", SETS));
-    for i in 0..20 {
-        let set = read_values(format!("./data/random/200/{}.txt", i));
-        rand_1000_group.bench_function(
-            BenchmarkId::new("use_combos", i), |b| b.iter(|| use_combos(black_box(2020), black_box(3), &set)));
-        rand_1000_group.bench_function(
-            BenchmarkId::new("find_addends", i), |b| b.iter(|| find_addends(black_box(2020), black_box(3), &set)));
-    }
-    rand_1000_group.finish();
-    */
 }
 
 criterion_group!(benches, benchmark);

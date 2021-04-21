@@ -1,75 +1,58 @@
 use itertools::Itertools;
 
 #[inline]
-pub fn find_addends(sum: u32, addend_count: u32, values: &Vec<u32>) -> Vec<u32> {
-    let mut smalls: Vec<u32> = Vec::with_capacity(values.len());
-    let mut bigs: Vec<u32> = Vec::with_capacity(values.len());
-    let mut perfect_count = 0;
-    let average: f32 = sum as f32 / addend_count as f32;
+pub fn sum_combo(values: &Vec<&&f32>) -> f32 {
+    let mut sum = 0.0;
 
-    // sort values
+    for value in values {
+        sum += **value;
+    }
+    sum
+}
+
+#[inline]
+pub fn find_addends(sum: f32, addend_count: usize, values: &Vec<f32>) -> Vec<f32> {
+    let mut bigs: Vec<&f32> = Vec::with_capacity(1000);
+    let mut smalls: Vec<&f32> = Vec::with_capacity(1000);
+    let mut perfects: usize = 0;
+    let average: f32 = sum / (addend_count as f32);
+
+    // sort the values
     for entry in values.iter() {
-        // first we test equality which will only be true if average
-        // is a whole number and entry and 'addend_count' are factors of sum.
-        if (*entry as f32) == average {
-            // we need to consider cases such as p + b + s
-            perfect_count += 1;
-            
-            if perfect_count == addend_count {
-                // 'values' contained 'addend_count' amount of perfect portions
-                // e.g. sum is 100 and values contained four '25's.
-                return vec![average as u32; addend_count as usize]; 
-            }
-        } else if (*entry as f32) < average {
-            smalls.push(*entry);
+        if *entry > average {
+            bigs.push(&entry);
+        } else if *entry < average {
+            smalls.push(&entry);
         } else {
-            bigs.push(*entry);
+            perfects += 1;
+
+            if perfects == addend_count {
+                // all perfects
+                return vec![average; addend_count];
+            }
         }
     }
 
-    if perfect_count > 0 {
-        // if there are perfects recurse without perfects to account for
-        // "p + b + s" type scenarios. Effectively, we save this state as
-        // "p + find_addends()" which ought to return the remaining 
-        // "b + s" sum. values does not need perfects removed as they
-        // cannot be counted twice.
-
-        // if perfects exist then average is a whole number and can be
-        // safely cast as u32
-        let mut imperfect_values =
-            find_addends(sum - perfect_count * average as u32, addend_count - perfect_count, values);
-
-        // if "p + b + s" == sum
-        if imperfect_values.iter().sum::<u32>() + (perfect_count * average as u32) == sum {
-            let mut answer = vec![average as u32, perfect_count];
-            answer.append(&mut imperfect_values);
-            return answer;
-        }
+    if perfects > 0 {
+        println!("perfects found, time to recurse");
     } else {
-        let mut small_count = 1;
-        // We know either b or s is at most (parts - 1). Otherwise, if b or s
-        // was equal to parts then they would be perfect. Call (parts - 1) "n".
-        // Therefore the addends are between nb + 1s to 1b to ns.
-
-        while small_count < addend_count {
-            for small_combo in smalls.iter().copied().combinations(small_count as usize) {
-                for mut big_combo in bigs.iter().copied().combinations((addend_count - small_count) as usize) {
-                    if small_combo.iter().sum::<u32>() +
-                        big_combo.iter().sum::<u32>() == sum {
-
-                        let mut answer: Vec<u32> = small_combo;
-                        answer.append(&mut big_combo);
-
-                        return answer;
+        // number of small addends we consider
+        for small_count in 1..addend_count {
+            for small_combo in smalls.iter().combinations(small_count) {
+                for big_combo in bigs.iter().combinations(addend_count - small_count) {
+                    if sum_combo(&small_combo) + sum_combo(&big_combo) == sum {
+                        println!("yay");
                     }
                 }
             }
-            small_count += 1;
-        } // end while small_count
+        }
     }
-    Vec::new()
+
+    // convert Vec<&f32> into Vec<f32> and return it
+    return smalls.into_iter().copied().collect();
 }
 
+#[inline]
 pub fn use_combos(sum: u32, addend_count: u32, values: &Vec<u32>) -> Vec<u32> {
     for combo in values.iter().copied().combinations(addend_count as usize) {
         if combo.iter().sum::<u32>() == sum {

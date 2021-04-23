@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use revised::{find_addends, use_combos};
 
 use std::fs::File;
@@ -6,54 +6,20 @@ use std::io;
 use std::io::prelude::*;
 use std::path::Path;
 
-use rand::Rng;
-use rand::distributions::{Distribution, Uniform};
-
 use std::time::Duration;
 
-const SETS: u32 = 100;
-
-fn gen_values(count: u32, max: u32, guarantee_solution: u32, file_path: String) -> Vec<u32> {
-    let mut rng = rand::thread_rng();
-    let range = Uniform::from(1..max);
-    let mut values: Vec<u32> = Vec::with_capacity(count as usize);
-    let mut values_string: String = String::new();
-
-    for _ in 0..count {
-        let random = range.sample(&mut rng);
-        values.push(random);
-        values_string = format!("{}{}\n", &values_string, random.to_string());
-    }
-
-    // Write to file
-    let path = Path::new(&file_path);
-    let display = path.display();
-
-    let mut file = match File::create(&path) {
-        Err(why) => panic!("Couldn't create {}: {}", display, why),
-        Ok(file) => file,
-    };
-
-    match file.write_all(values_string.as_bytes()) {
-        Err(why) => panic!("Couldn't write to {}: {}", display, why),
-        Ok(_) => {},
-    }
-
-    values
-}
-
-fn read_values(path: String) -> Vec<u32> {
+fn read_values(path: String) -> Vec<f32> {
     // file io
     let file = File::open(path).unwrap();
     let mut reader = io::BufReader::new(file);
     let mut buf = String::new();
-    let mut contents: Vec<u32> = Vec::with_capacity(1000);
+    let mut contents: Vec<f32> = Vec::with_capacity(1000);
     let mut line_number = 1;
 
     while reader.read_line(&mut buf).unwrap() > 0 {
         let line = buf.trim_end();
 
-        if let Ok(x) = line.parse::<u32>() {
+        if let Ok(x) = line.parse::<f32>() {
             contents.push(x);
         } else {
             println!("Error parsing value on line {}", line_number);
@@ -68,27 +34,27 @@ fn read_values(path: String) -> Vec<u32> {
 
 pub fn benchmark(c: &mut Criterion) {
     // initialize our allocated vector
-    // let mut sets: Vec<u32> = Vec::new(); 
+    // let mut sets: Vec<f32> = Vec::new(); 
 
     let mut aoc = c.benchmark_group("Advent of Code Data");
-    aoc.measurement_time(Duration::from_millis(9000));
+    aoc.measurement_time(Duration::from_millis(10500));
     let aoc_data = read_values("./data/input.txt".to_string());
-    aoc.bench_function("use_combos", |b| b.iter(|| use_combos(black_box(2020), black_box(3), &aoc_data)));
-    aoc.bench_function("find_addends", |b| b.iter(|| find_addends(black_box(2020), black_box(3), &aoc_data)));
+    aoc.bench_function("use_combos", |b| b.iter(|| use_combos(black_box(2020.0), black_box(3), &aoc_data)));
+    aoc.bench_function("find_addends", |b| b.iter(|| find_addends(black_box(2020.0), black_box(3), &aoc_data)));
     aoc.finish();
 
     let mut five = c.benchmark_group("five_addends");
-    five.measurement_time(Duration::from_millis(9000));
+    five.sample_size(50).measurement_time(Duration::from_secs(80));
     let five_data = read_values("./data/five_addends_2020_sum.txt".to_string());
-    five.bench_function("use_combos", |b| b.iter(|| use_combos(black_box(2020), black_box(5), &five_data)));
-    five.bench_function("find_addends", |b| b.iter(|| find_addends(black_box(2020), black_box(5), &five_data)));
+    five.bench_function("use_combos", |b| b.iter(|| use_combos(black_box(2020.0), black_box(5), &five_data)));
+    five.bench_function("find_addends", |b| b.iter(|| find_addends(black_box(2020.0), black_box(5), &five_data)));
     five.finish();
 
     let mut test_two = c.benchmark_group("test_two");
     test_two.sample_size(20).measurement_time(Duration::from_secs(500));
     let two_data = read_values("./data/2.txt".to_string());
-    test_two.bench_function("use_combos", |b| b.iter(|| use_combos(black_box(2020), black_box(5), &two_data)));
-    test_two.bench_function("find_addends", |b| b.iter(|| find_addends(black_box(2020), black_box(5), &two_data)));
+    test_two.bench_function("use_combos", |b| b.iter(|| use_combos(black_box(2020.0), black_box(5), &two_data)));
+    test_two.bench_function("find_addends", |b| b.iter(|| find_addends(black_box(2020.0), black_box(5), &two_data)));
     test_two.finish();
 }
 

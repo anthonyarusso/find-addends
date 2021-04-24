@@ -56,6 +56,13 @@ pub fn benchmark(c: &mut Criterion) {
     test_two.bench_function("use_combos", |b| b.iter(|| use_combos(black_box(2020.0), black_box(5), &two_data)));
     test_two.bench_function("find_addends", |b| b.iter(|| find_addends(black_box(2020.0), black_box(5), &two_data)));
     test_two.finish();
+
+    let mut four_perfects = c.benchmark_group("four_perfects");
+    four_perfects.sample_size(10).measurement_time(Duration::from_secs(60));
+    let four_perfects_data = read_values("./data/2.txt".to_string());
+    four_perfects.bench_function("use_combos", |b| b.iter(|| use_combos(black_box(2020.0), black_box(5), &four_perfects_data)));
+    four_perfects.bench_function("find_addends", |b| b.iter(|| find_addends(black_box(2020.0), black_box(5), &four_perfects_data)));
+    four_perfects.finish();
 }
 
 criterion_group!(benches, benchmark);
